@@ -1,6 +1,6 @@
 // ==================== 改这2个 ====================
 const SITE_PWD = "07101209"; // 改成你自己的网页访问密码
-const WORKER_URL = "https://broken-shape-4b33.wylleomessi.workers.dev"; // 你的Cloudflare地址
+const WORKER_URL = "https://broken-shape-4b33.wylileomessi.workers.dev"; // 你的Cloudflare地址
 // =================================================
 
 let messages = [];
