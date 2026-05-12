@@ -1,0 +1,35 @@
+* {margin:0;padding:0;box-sizing:border-box;font-family:system-ui, sans-serif;}
+body {background:#f5f7fa;transition:background 0.3s;}
+body.dark {background:#1a1a2e;color:#eee;}
+
+.login-wrap {height:100vh;display:flex;align-items:center;justify-content:center;}
+.login-box {background:#fff;padding:40px 30px;border-radius:12px;box-shadow:0 4px 20px #00000015;width:90%;max-width:400px;}
+body.dark .login-box {background:#252540;}
+.login-box h2 {margin-bottom:25px;text-align:center;color:#222;}
+body.dark .login-box h2 {color:#eee;}
+.login-box input {width:100%;padding:14px;border:1px solid #ddd;border-radius:8px;margin-bottom:20px;font-size:16px;}
+body.dark .login-box input {background:#333;border-color:#444;color:#eee;}
+.login-box button {width:100%;padding:14px;background:#1677ff;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;}
+
+.chat-wrap {height:100vh;display:flex;flex-direction:column;}
+.top-bar {display:flex;justify-content:space-between;align-items:center;padding:15px 20px;background:#fff;border-bottom:1px solid #eee;}
+body.dark .top-bar {background:#252540;border-color:#333;}
+.top-bar span {font-size:18px;font-weight:bold;}
+.btn-group button {margin-left:8px;padding:6px 12px;border:none;border-radius:6px;background:#1677ff;color:#fff;cursor:pointer;}
+
+.msg-box {flex:1;padding:20px;overflow-y:auto;}
+.msg-item {margin-bottom:18px;max-width:90%;}
+.user-msg {display:flex;justify-content:flex-end;}
+.bot-msg {display:flex;justify-content:flex-start;}
+.msg-content {padding:12px 16px;border-radius:12px;line-height:1.6;white-space:pre-wrap;}
+.user-msg .msg-content {background:#1677ff;color:#fff;border-bottom-right-radius:2px;}
+.bot-msg .msg-content {background:#fff;border:1px solid #eee;border-bottom-left-radius:2px;}
+body.dark .bot-msg .msg-content {background:#2a2a40;border-color:#444;}
+.copy-btn {margin-top:6px;font-size:12px;color:#1677ff;cursor:pointer;text-align:right;}
+
+.input-wrap {display:flex;align-items:center;padding:15px;background:#fff;border-top:1px solid #eee;gap:10px;}
+body.dark .input-wrap {background:#252540;border-color:#333;}
+.input-wrap textarea {flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;resize:none;height:50px;font-size:16px;}
+body.dark .input-wrap textarea {background:#333;border-color:#444;color:#eee;}
+.input-wrap button {padding:12px 20px;background:#1677ff;color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;}
+#fileInput {font-size:12px;padding:6px;width:110px;}
