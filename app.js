@@ -79,26 +79,41 @@ body: JSON.stringify({ messages })
 
 const reader = res.body.getReader();
 const decoder = new TextDecoder();
+let buffer = '';
 
 while (true) {
 const { done, value } = await reader.read();
 if (done) break;
-const chunk = decoder.decode(value);
-const lines = chunk.split("\n").filter(i => i.startsWith("data: "));
-for (let line of lines) {
-const data = line.replace("data: ", "").trim();
-if (data === "[DONE]") continue;
+
+buffer += decoder.decode(value, { stream: true });
+const lines = buffer.split('\n');
+buffer = lines.pop() || '';
+
+for (const line of lines) {
+const trimmed = line.trim();
+if (!trimmed) continue;
+if (trimmed === 'data: [DONE]') continue;
+
+if (trimmed.startsWith('data:')) {
 try {
-const json = JSON.parse(data);
-if (json.choices?.[0]?.delta?.content) {
-fullText += json.choices[0].delta.content;
+const jsonStr = trimmed.slice(5).trim();
+const data = JSON.parse(jsonStr);
+const delta = data.choices?.[0]?.delta || {};
+
+// 关键：兼容 v4-flash 的思考流 + 回答流
+const text = delta.content || delta.reasoning_content || '';
+if (text) {
+fullText += text;
 contentDom.innerText = fullText;
 }
 } catch (e) {}
 }
 }
+}
+
 aiDom.innerHTML = `<div class="msg-content">${fullText}</div><div class="copy-btn" onclick="copyText(\`${fullText}\`)">复制</div>`;
 messages.push({ role: "assistant", content: fullText });
+
 } catch (e) {
 contentDom.innerText = "请求失败，请重试";
 }
