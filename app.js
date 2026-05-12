@@ -1,127 +1,137 @@
-// ==================== 改这2个 ====================
-const SITE_PWD = "07101209"; // 改成你自己的网页访问密码
-const WORKER_URL = "https://broken-shape-4b33.wylileomessi.workers.dev"; // 你的Cloudflare地址
-// =================================================
+// ==================== 直接调用 DeepSeek API 极速版 ====================
+const SITE_PWD = "07101209";
+const DEEPSEEK_KEY = "sk-dd2f3f54f0b54820a492e11a8e6d1d52"; // 你的密钥
+// =====================================================================
 
 let messages = [];
 
 function checkPwd() {
-const val = document.getElementById("pwdInput").value.trim();
-if (val === SITE_PWD) {
-document.getElementById("loginWrap").style.display = "none";
-document.getElementById("chatWrap").style.display = "flex";
-} else {
-alert("密码错误");
-}
+  const val = document.getElementById("pwdInput").value.trim();
+  if (val === SITE_PWD) {
+    document.getElementById("loginWrap").style.display = "none";
+    document.getElementById("chatWrap").style.display = "flex";
+  } else {
+    alert("密码错误");
+  }
 }
 
 function toggleDark() {
-document.body.classList.toggle("dark");
+  document.body.classList.toggle("dark");
 }
 
 function clearChat() {
-messages = [];
-document.getElementById("msgBox").innerHTML = "";
+  messages = [];
+  document.getElementById("msgBox").innerHTML = "";
 }
 
 function addMsg(html, isUser) {
-const box = document.getElementById("msgBox");
-const div = document.createElement("div");
-div.className = isUser ? "msg-item user-msg" : "msg-item bot-msg";
-div.innerHTML = html;
-box.appendChild(div);
-box.scrollTop = box.scrollHeight;
-return div;
+  const box = document.getElementById("msgBox");
+  const div = document.createElement("div");
+  div.className = isUser ? "msg-item user-msg" : "msg-item bot-msg";
+  div.innerHTML = html;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
 }
 
 function copyText(txt) {
-navigator.clipboard.writeText(txt);
-alert("已复制");
+  navigator.clipboard.writeText(txt);
+  alert("已复制");
 }
 
 async function uploadFile() {
-const file = document.getElementById("fileInput").files[0];
-if (!file) return;
-const reader = new FileReader();
-reader.onload = async function(e) {
-let text = "";
-if (file.name.endsWith(".txt")) {
-text = e.target.result;
-} else if (file.name.endsWith(".docx")) {
-const res = await mammoth.extractRawText({ arrayBuffer: e.target.result });
-text = res.value;
-}
-if (text.length > 45000) text = text.slice(0, 45000);
-document.getElementById("userInput").value = text;
-};
-file.name.endsWith(".txt") ? reader.readAsText(file) : reader.readAsArrayBuffer(file);
+  const file = document.getElementById("fileInput").files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async function (e) {
+    let text = "";
+    if (file.name.endsWith(".txt")) {
+      text = e.target.result;
+    } else if (file.name.endsWith(".docx")) {
+      const res = await mammoth.extractRawText({ arrayBuffer: e.target.result });
+      text = res.value;
+    }
+    if (text.length > 45000) text = text.slice(0, 45000);
+    document.getElementById("userInput").value = text;
+  };
+  file.name.endsWith(".txt") ? reader.readAsText(file) : reader.readAsArrayBuffer(file);
 }
 
 async function sendMsg() {
-const input = document.getElementById("userInput");
-const text = input.value.trim();
-if (!text) return;
-input.value = "";
-addMsg(`<div class="msg-content">${text}</div>`, true);
-messages.push({ role: "user", content: text });
+  const input = document.getElementById("userInput");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
 
-const aiDom = addMsg(`<div class="msg-content">思考中...</div>`, false);
-const contentDom = aiDom.querySelector(".msg-content");
-contentDom.innerText = "";
-let fullText = "";
+  addMsg(`<div class="msg-content">${text}</div>`, true);
+  messages.push({ role: "user", content: text });
 
-try {
-const res = await fetch(WORKER_URL, {
-method: "POST",
-headers: { "Content-Type": "application/json" },
-body: JSON.stringify({ messages })
-});
+  const aiDom = addMsg(`<div class="msg-content">思考中...</div>`, false);
+  const contentDom = aiDom.querySelector(".msg-content");
+  contentDom.innerText = "";
+  let fullText = "";
 
-const reader = res.body.getReader();
-const decoder = new TextDecoder();
-let buffer = '';
+  try {
+    const res = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${DEEPSEEK_KEY}`
+      },
+      body: JSON.stringify({
+        model: "deepseek-v4-flash",
+        messages: messages,
+        stream: true,
+        temperature: 0.65,
+        top_p: 0.95,
+        max_tokens: 1500,
+        frequency_penalty: 0.08,
+        presence_penalty: 0.05
+      })
+    });
 
-while (true) {
-const { done, value } = await reader.read();
-if (done) break;
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
 
-buffer += decoder.decode(value, { stream: true });
-const lines = buffer.split('\n');
-buffer = lines.pop() || '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-for (const line of lines) {
-const trimmed = line.trim();
-if (!trimmed) continue;
-if (trimmed === 'data: [DONE]') continue;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
 
-if (trimmed.startsWith('data:')) {
-try {
-const jsonStr = trimmed.slice(5).trim();
-const data = JSON.parse(jsonStr);
-const delta = data.choices?.[0]?.delta || {};
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed === "data: [DONE]") continue;
 
-// 关键：兼容 v4-flash 的思考流 + 回答流
-const text = delta.content || delta.reasoning_content || '';
-if (text) {
-fullText += text;
-contentDom.innerText = fullText;
-}
-} catch (e) {}
-}
-}
-}
+        if (trimmed.startsWith("data:")) {
+          try {
+            const jsonStr = trimmed.slice(5).trim();
+            const data = JSON.parse(jsonStr);
+            const delta = data.choices?.[0]?.delta || {};
+            const text = delta.content || delta.reasoning_content || "";
+            if (text) {
+              fullText += text;
+              contentDom.innerText = fullText;
+            }
+          } catch (e) { }
+        }
+      }
+    }
 
-aiDom.innerHTML = `<div class="msg-content">${fullText}</div><div class="copy-btn" onclick="copyText(\`${fullText}\`)">复制</div>`;
-messages.push({ role: "assistant", content: fullText });
+    aiDom.innerHTML = `<div class="msg-content">${fullText}</div><div class="copy-btn" onclick="copyText(\`${fullText}\`)">复制</div>`;
+    messages.push({ role: "assistant", content: fullText });
 
-} catch (e) {
-contentDom.innerText = "请求失败，请重试";
-}
+  } catch (e) {
+    contentDom.innerText = "请求失败，请重试";
+  }
 }
 
 document.getElementById("userInput").addEventListener("keydown", e => {
-if (e.key === "Enter" && !e.shiftKey) {
-e.preventDefault();
-sendMsg();
-}
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg();
+  }
 });
