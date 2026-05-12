@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepSeek V4 Flash 智能助手</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="loginWrap" class="login-wrap">
+<div class="login-box">
+<h2>DeepSeek 私密助手</h2>
+<input type="password" id="pwdInput" placeholder="请输入访问密码">
+<button onclick="checkPwd()">进入使用</button>
+</div>
+</div>
+
+<div id="chatWrap" class="chat-wrap" style="display:none;">
+<div class="top-bar">
+<span>DeepSeek V4 Flash 助手</span>
+<div class="btn-group">
+<button onclick="clearChat()">清空对话</button>
+<button onclick="toggleDark()">明暗切换</button>
+</div>
+</div>
+<div id="msgBox" class="msg-box"></div>
+<div class="input-wrap">
+<input type="file" id="fileInput" accept=".txt,.docx" onchange="uploadFile()">
+<textarea id="userInput" placeholder="输入问题，回车发送..."></textarea>
+<button onclick="sendMsg()">发送</button>
+</div>
+</div>
+
+<script src="app.js"></script>
+<script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
+</body>
+</html>
